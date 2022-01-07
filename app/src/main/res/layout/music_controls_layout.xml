@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="@color/white">
+
+    <ImageView
+        android:id="@+id/music_icon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/qqmusic_logo" />
+
+    <TextView
+        android:id="@+id/music_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="2dp"
+        android:layout_toRightOf="@+id/music_icon"
+        android:singleLine="true"
+        android:text="夜曲"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:id="@+id/music_singer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/music_current_lyric"
+        android:layout_below="@+id/music_name"
+        android:layout_marginLeft="5dp"
+        android:layout_toRightOf="@+id/music_icon"
+        android:gravity="center_vertical"
+        android:singleLine="true"
+        android:text="周杰伦"
+        android:textColor="@color/gray_3"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/music_current_lyric"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/music_icon"
+        android:layout_marginLeft="5dp"
+        android:layout_marginBottom="2dp"
+        android:layout_toRightOf="@+id/music_icon"
+        android:singleLine="true"
+        android:text="歌词"
+        android:textColor="#22d59c"
+        android:textSize="12sp" />
+
+    <ImageView
+        android:id="@+id/music_pre"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignTop="@+id/music_icon"
+        android:layout_alignBottom="@+id/music_icon"
+        android:layout_toLeftOf="@+id/music_play"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="10dp"
+        android:src="@drawable/music_pre" />
+
+    <ImageView
+        android:id="@+id/music_play"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignTop="@+id/music_icon"
+        android:layout_alignBottom="@+id/music_icon"
+        android:layout_toLeftOf="@+id/music_next"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="10dp"
+        android:src="@drawable/music_play" />
+
+    <ImageView
+        android:id="@+id/music_next"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignTop="@+id/music_icon"
+        android:layout_alignBottom="@+id/music_icon"
+        android:layout_toLeftOf="@+id/music_download"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="10dp"
+        android:src="@drawable/music_next" />
+
+    <ImageView
+        android:id="@+id/music_download"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignTop="@+id/music_icon"
+        android:layout_alignBottom="@+id/music_icon"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="10dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="visible"
+        android:padding="10dp"
+        android:src="@drawable/music_download" />
+</RelativeLayout>

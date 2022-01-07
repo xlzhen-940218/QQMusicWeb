@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QQ音乐网页版</string>
+    <string name="check_video">检测到视频：%s，是否下载?</string>
+    <string name="check_music">检测到音乐：%s，是否下载?</string>
+    <string name="download">下载</string>
+    <string name="audio_or_video_not_found">未找到资源</string>
+</resources>

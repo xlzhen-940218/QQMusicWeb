@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">QQMusicWeb</string>
+    <string name="check_video">Check video：%s，download?</string>
+    <string name="check_music">Check music：%s，download?</string>
+    <string name="download">Download</string>
+    <string name="audio_or_video_not_found">Music or video not found!</string>
+</resources>
