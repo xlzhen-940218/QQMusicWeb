@@ -66,6 +66,7 @@ public class JsConfig {
         String js = String.format(if_format, "m/index.html"
                 , String.format(find_by_class_style_format, "header", String.format(margin_top_format, "30px"))
                         + String.format(find_by_class_style_format, "top_operation_bar", String.format(margin_top_format, "30px"))
+                        +String.format(find_by_class_style_format,"top_operation_bar__tit",String.format(margin_top_format, "15px"))
                         + String.format(find_by_class_style_format, "top_operation_bar__txt", String.format(visibility_format, "hidden"))
                         + String.format(find_by_class_style_format, "top_operation_bar__btn", String.format(visibility_format, "hidden"))
                         + String.format(find_by_class_style_format, "bottom_bar", String.format(visibility_format, "hidden")));

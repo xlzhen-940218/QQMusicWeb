@@ -10,8 +10,7 @@
         android:id="@+id/music_icon"
         android:layout_width="80dp"
         android:layout_height="80dp"
-        android:scaleType="centerCrop"
-        android:src="@mipmap/qqmusic_logo" />
+        android:scaleType="centerCrop" />
 
     <TextView
         android:id="@+id/music_name"

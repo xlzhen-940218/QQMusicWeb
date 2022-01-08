@@ -1,11 +1,14 @@
 package com.tencent.qqmusic.web;
 
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -26,7 +29,10 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -153,18 +159,24 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
         videoPlayerLayout = findViewById(R.id.video_player_layout);
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.setTitle("Downloading...");
         webView = findViewById(R.id.web_view);
+
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+        webView.requestFocus();
         webSettings.setAllowContentAccess(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setDatabaseEnabled(true);
-        webSettings.setLoadWithOverviewMode(false);
+        webSettings.setLoadWithOverviewMode(true);
         webSettings.setSaveFormData(true);
+        webSettings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         webSettings.setSupportZoom(true);
         webSettings.setBuiltInZoomControls(true);
@@ -204,6 +216,16 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (url.startsWith("https://i.y.qq.com/")
+                        || url.startsWith("https://y.qq.com/")) {
+
+                    view.loadUrl(url);
+                }
+                return true;
+            }
+
+            @Override
             public void onLoadResource(WebView view, String url) {
                 super.onLoadResource(view, url);
                 if (url.contains(".m4a") || url.contains(".mp3") || url.contains(".mp4")) {
@@ -224,6 +246,12 @@ public class MainActivity extends AppCompatActivity {
                 super.onPageFinished(view, url);
                 if (!queue.contains(url))
                     queue.add(url);
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                resourceUrls.clear();
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
@@ -315,46 +343,83 @@ public class MainActivity extends AppCompatActivity {
         webView.postDelayed(loadJSRunnable, 1000);
 
         findViewById(R.id.music_download).setOnClickListener(v -> {
-            if (resourceUrls.size() == 0) {
-                Snackbar.make(webView, R.string.audio_or_video_not_found, 100).show();
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
                 return;
             }
-
-            String url = resourceUrls.remove(resourceUrls.size() - 1);
-            if (url.contains(".m4a") || url.contains(".mp3") || url.contains(".mp4")) {
-                String ext = "";
-                boolean audioOrVideo = false;
-                if (url.contains(".m4a")) {
-                    ext = ".m4a";
-                    audioOrVideo = true;
-                } else if (url.contains(".mp3")) {
-                    ext = ".mp3";
-                    audioOrVideo = true;
-                } else if (url.contains(".mp4")) {
-                    ext = ".mp4";
-                    audioOrVideo = false;
-                }
-
-                String finalExt = ext;
-                boolean finalAudioOrVideo = audioOrVideo;
-                String finalUrl = url;
-                Snackbar.make(webView, String.format(getString(audioOrVideo ? R.string.check_music : R.string.check_video), url), 2000)
-                        .setAction(R.string.download, v1 -> {
-                            downloadFile(finalUrl, finalAudioOrVideo ? Environment.DIRECTORY_MUSIC : Environment.DIRECTORY_MOVIES
-                                    , finalAudioOrVideo?songName+" · "+singerName:mvName, finalExt);
-                        }).show();
-            }
-
-            if (url.contains(".m3u8")) {
-                String finalUrl1 = url;
-                Snackbar.make(webView, String.format(getString(R.string.check_video), url), 2000)
-                        .setAction(R.string.download, v1 -> {
-                            progressDialog.show();
-                            M3U8Downloader.getInstance().download(finalUrl1);
-                        }).show();
-            }
+            checkDownload();
         });
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            checkDownload();
+        }
+    }
+
+    private void checkDownload() {
+        if (resourceUrls.size() == 0) {
+            Snackbar.make(webView, R.string.audio_or_video_not_found, 100).show();
+            return;
+        }
+        int index = resourceUrls.size() - 1;
+        checkDownloadIndex(index);
+
+    }
+
+    private void checkDownloadIndex(int index) {
+        if (index < 0)
+            return;
+
+        String url = resourceUrls.get(index);
+        if (url.contains(".m4a") || url.contains(".mp3") || url.contains(".mp4")) {
+            String ext = "";
+            boolean audioOrVideo = false;
+            if (url.contains(".m4a")) {
+                ext = ".m4a";
+                audioOrVideo = true;
+            } else if (url.contains(".mp3")) {
+                ext = ".mp3";
+                audioOrVideo = true;
+            } else if (url.contains(".mp4")) {
+                ext = ".mp4";
+                audioOrVideo = false;
+            }
+
+            String finalExt = ext;
+            boolean finalAudioOrVideo = audioOrVideo;
+            String finalUrl = url;
+            Snackbar.make(webView, String.format(getString(audioOrVideo ?
+                    R.string.check_music : R.string.check_video), url), 5000)
+                    .setAction(R.string.download, v1 -> {
+                        downloadFile(finalUrl, finalAudioOrVideo ? Environment.DIRECTORY_MUSIC : Environment.DIRECTORY_MOVIES
+                                , finalAudioOrVideo ? songName + " · " + singerName : mvName, finalExt);
+                    }).addCallback(new Snackbar.Callback() {
+                @Override
+                public void onDismissed(Snackbar transientBottomBar, int event) {
+                    super.onDismissed(transientBottomBar, event);
+                    checkDownloadIndex(index - 1);
+                }
+            }).show();
+        }
+
+        if (url.contains(".m3u8")) {
+            String finalUrl1 = url;
+            Snackbar.make(webView, String.format(getString(R.string.check_video), url), 5000)
+                    .setAction(R.string.download, v1 -> {
+                        progressDialog.show();
+                        M3U8Downloader.getInstance().download(finalUrl1);
+                    }).addCallback(new Snackbar.Callback() {
+                @Override
+                public void onDismissed(Snackbar transientBottomBar, int event) {
+                    super.onDismissed(transientBottomBar, event);
+                    checkDownloadIndex(index - 1);
+                }
+            }).show();
+        }
     }
 
     private void downloadFile(String url, String type, String filename, String ext) {

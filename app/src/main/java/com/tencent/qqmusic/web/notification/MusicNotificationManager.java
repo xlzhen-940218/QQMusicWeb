@@ -79,7 +79,7 @@ public class MusicNotificationManager {
 
         notification.contentView.setOnClickPendingIntent(R.id.music_play
                 , PendingIntent.getBroadcast(activity, 0, new Intent(activity, MusicPlayOrPauseReceiver.class)
-                        , PendingIntent.FLAG_UPDATE_CURRENT));
+                        , PendingIntent.FLAG_IMMUTABLE));
 
         activity.findViewById(R.id.music_play).setOnClickListener(v->{
             playOrPause();
@@ -87,7 +87,7 @@ public class MusicNotificationManager {
 
         notification.contentView.setOnClickPendingIntent(R.id.music_next
                 , PendingIntent.getBroadcast(activity, 0, new Intent(activity, MusicNextReceiver.class)
-                        , PendingIntent.FLAG_UPDATE_CURRENT));
+                        , PendingIntent.FLAG_IMMUTABLE));
 
         activity.findViewById(R.id.music_next).setOnClickListener(v->{
             nextMusic();
@@ -97,7 +97,7 @@ public class MusicNotificationManager {
         preIntent.putExtra("type", "pre");
         notification.contentView.setOnClickPendingIntent(R.id.music_pre
                 , PendingIntent.getBroadcast(activity, 0, new Intent(activity, MusicPreReceiver.class)
-                        , PendingIntent.FLAG_UPDATE_CURRENT));
+                        , PendingIntent.FLAG_IMMUTABLE));
 
         activity.findViewById(R.id.music_pre).setOnClickListener(v->{
             preMusic();
@@ -135,7 +135,7 @@ public class MusicNotificationManager {
 
         Intent intent = new Intent(activity, MainActivity.class);
         intent.putExtra("url", info.getCurrentMusicUrl());
-        notification.contentIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notification.contentIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         if(activity.findViewById(R.id.music_controls_layout).getVisibility() == View.GONE){
             activity.findViewById(R.id.music_controls_layout).setVisibility(View.VISIBLE);
         }
@@ -161,7 +161,7 @@ public class MusicNotificationManager {
 
         Intent intent = new Intent(activity, MainActivity.class);
         intent.putExtra("url", info.getCurrentMusicUrl());
-        notification.contentIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notification.contentIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_IMMUTABLE);
 
         manager.notify(0, notification);
         if(activity.findViewById(R.id.music_controls_layout).getVisibility() == View.GONE){
