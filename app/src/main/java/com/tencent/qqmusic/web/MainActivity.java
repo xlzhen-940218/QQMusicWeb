@@ -5,6 +5,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -28,11 +29,14 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -47,12 +51,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import gdut.bsx.share2.Share2;
 import gdut.bsx.share2.ShareContentType;
@@ -86,6 +86,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ImageLoader.getInstance().init(ImageLoaderConfiguration.createDefault(this));
         MusicNotificationManager.getInstance().init(this);
+
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (queue.size() > 1) {
+                    if (queue.get(queue.size() - 1).contains("taoge.html") || queue.get(queue.size() - 1).contains("playsong.html")) {
+                        findViewById(R.id.music_controls_layout).setVisibility(View.GONE);
+                        MusicNotificationManager.getInstance().cancel();
+                    }
+                    queue.remove(queue.get(queue.size() - 1));//先去掉当前页
+                    webView.loadUrl(queue.remove(queue.size() - 1));
+                    return;
+                }
+                if (webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    finish();
+                }
+            }
+        });
 
         M3U8DownloaderConfig
                 .build(getApplicationContext())
@@ -187,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         webSettings.setDomStorageEnabled(true);
 
-        webSettings.setAppCacheEnabled(true);
+        //webSettings.setAppCacheEnabled(true);
 
         webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         webSettings.setLoadsImagesAutomatically(true);
@@ -343,10 +364,7 @@ public class MainActivity extends AppCompatActivity {
         webView.postDelayed(loadJSRunnable, 1000);
 
         findViewById(R.id.music_download).setOnClickListener(v -> {
-            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
-                return;
-            }
+
             checkDownload();
         });
 
@@ -434,16 +452,31 @@ public class MainActivity extends AppCompatActivity {
                                 progressDialog.setMessage(proGress + "%");
                                 if (status == DownloadStatus.LOADED) {
                                     progressDialog.dismiss();
-                                    new Share2.Builder(MainActivity.this)
-                                            // 指定分享的文件类型
-                                            .setContentType(type.equals(Environment.DIRECTORY_MUSIC) ? ShareContentType.AUDIO : ShareContentType.VIDEO)
-                                            // 设置要分享的文件 Uri
-                                            .setShareFileUri(uri)
-                                            // 设置分享选择器的标题
-                                            .setTitle(filename + ext)
-                                            .build()
-                                            // 发起分享
-                                            .shareBySystem();
+                                    try {
+                                        // 2. 创建 Intent
+                                        Intent intent = new Intent(Intent.ACTION_VIEW);
+
+                                        // 设置数据和类型
+                                        intent.setDataAndType(uri, type.equals(Environment.DIRECTORY_MUSIC)?"audio/*":"video/*");
+
+                                        // 3. 授予临时读取权限给目标应用
+                                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                                        // 4. 添加打开新任务的 Flag (如果是在非 Activity Context 中启动，这是必需的)
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                                        // 5. 启动 Activity
+                                        startActivity(intent);
+
+                                    } catch (IllegalArgumentException e) {
+                                        // 如果 FileProvider 配置错误，会抛出此异常
+                                        Toast.makeText(MainActivity.this, "FileProvider 配置错误: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                        e.printStackTrace();
+                                    } catch (Exception e) {
+                                        // 处理找不到可打开此 MIME 类型的应用的异常 (ActivityNotFoundException)
+                                        Toast.makeText(MainActivity.this, "找不到可以打开此文件的应用", Toast.LENGTH_SHORT).show();
+                                        e.printStackTrace();
+                                    }
                                 }
                             });
 
@@ -474,20 +507,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @Override
-    public void onBackPressed() {
-        if (queue.size() > 1) {
-            if (queue.get(queue.size() - 1).contains("taoge.html") || queue.get(queue.size() - 1).contains("playsong.html")) {
-                findViewById(R.id.music_controls_layout).setVisibility(View.GONE);
-                MusicNotificationManager.getInstance().cancel();
-            }
-            queue.remove(queue.get(queue.size() - 1));//先去掉当前页
-            webView.loadUrl(queue.remove(queue.size() - 1));
-            return;
-        }
-        super.onBackPressed();
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         webView.onResume();
@@ -503,6 +522,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         webView.destroy();
+        MusicNotificationManager.getInstance().onDestroy();
     }
 
     @Override

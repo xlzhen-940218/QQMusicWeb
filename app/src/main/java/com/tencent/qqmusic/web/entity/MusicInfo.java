@@ -1,6 +1,10 @@
 package com.tencent.qqmusic.web.entity;
 
-public class MusicInfo {
+import java.io.Serializable;
+
+public class MusicInfo implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
     private String currentMusicUrl;
     private String musicName;
     private String musicSinger;
